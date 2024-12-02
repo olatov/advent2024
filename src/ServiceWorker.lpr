@@ -25,10 +25,8 @@ begin
   inherited Create(Aowner);
 
   Fcachename := Yourcachename;
-  Fresources := [
-    '/images/error.png'
-    ];
-  Fallbackurl := '/images/error.png';
+  Fresources := ['images/error.png'];
+  Fallbackurl := 'images/error.png';
 end;
 
 var
