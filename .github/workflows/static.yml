@@ -38,7 +38,7 @@ jobs:
           # Define the new base href value
           NEW_BASE="/advent2024/"
           # Use sed to find and replace <base> tags in all HTML files
-          find _site -name "src/www/*.html" -exec sed -i "s|<base[^>]*>|<base href=\"$NEW_BASE\">|g" {} \;        
+          find src/www -name "*.html" -exec sed -i "s|<base[^>]*>|<base href=\"$NEW_BASE\">|g" {} \;        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
