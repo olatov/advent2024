@@ -33,6 +33,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Update <base> Tag in HTML Files
+        run: |
+          # Define the new base href value
+          NEW_BASE="/advent2024/"
+          # Use sed to find and replace <base> tags in all HTML files
+          find _site -name "src/www/*.html" -exec sed -i "s|<base[^>]*>|<base href=\"$NEW_BASE\">|g" {} \;        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
