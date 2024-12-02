@@ -52,7 +52,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target FileExt=".js">
-      <Filename Value="/home/oleg/soft/fpcupdeluxe/projects/advent/src/www/advent"/>
+      <Filename Value="www/advent"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>

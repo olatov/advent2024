@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Compiler Value="/home/oleg/code/pas/pas2js/bin/x86_64-linux/pas2js" Date="1733072571"/>
-  <Params Value="-Tbrowser -Pecmascript5 -MObjFPC -Sc -O1 -l -vewnhibq -Fi/home/oleg/soft/fpcupdeluxe/projects/advent/src/js -Fu/home/oleg/soft/fpcupdeluxe/projects/advent/src/ -FU/home/oleg/soft/fpcupdeluxe/projects/advent/src/js/ -FE/home/oleg/soft/fpcupdeluxe/projects/advent/src/www/ -o/home/oleg/soft/fpcupdeluxe/projects/advent/src/www/advent.js -Jeutf-8 -Jirtl.js -Jc -Jminclude advent.lpr"/>
+  <Compiler Value="/Users/oleglatov/code/pas/pas2js/bin/aarch64-darwin/pas2js" Date="1733092871"/>
+  <Params Value="-Tbrowser -Pecmascript5 -MObjFPC -Sc -O1 -l -vewnhibq -Fi/Users/oleglatov/code/pas/advent2024/src/js -Fu/Users/oleglatov/code/pas/advent2024/src/ -FU/Users/oleglatov/code/pas/advent2024/src/js/ -FE/Users/oleglatov/code/pas/advent2024/src/www/ -o/Users/oleglatov/code/pas/advent2024/src/www/advent.js -Jeutf-8 -Jirtl.js -Jc -Jminclude advent.lpr"/>
 </CONFIG>

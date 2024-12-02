@@ -3812,6 +3812,11 @@ rtl.module("Generics.Collections",["System","Classes","SysUtils","RTLConsts","Ty
     };
   },"TEnumerator<System.Longint>");
   rtl.createClass(this,"TEnumerable$G17",pas.System.TObject,function () {
+    this.GetEnumerator = function () {
+      var Result = null;
+      Result = this.DoGetEnumerator();
+      return Result;
+    };
   },"TEnumerable<System.Longint>");
   rtl.createClass(this,"TCustomArrayHelper$G12",pas.System.TObject,function () {
     this.Sort$1 = function (AValues, AComparer, AIndex, ACount) {
@@ -3880,6 +3885,16 @@ rtl.module("Generics.Collections",["System","Classes","SysUtils","RTLConsts","Ty
     this.Notify = function (AValue, ACollectionNotification) {
       if (this.FOnNotify != null) this.FOnNotify(this,AValue,ACollectionNotification);
     };
+    this.DoRemove = function (AIndex, ACollectionNotification) {
+      var Result = 0;
+      if ((AIndex < 0) || (AIndex >= this.FLength)) throw pas.SysUtils.EArgumentOutOfRangeException.$create("Create$1",[rtl.getResStr(pas["Generics.Strings"],"SArgumentOutOfRange")]);
+      Result = this.FItems[AIndex];
+      this.FLength -= 1;
+      this.FItems[AIndex] = -2147483648;
+      this.FItems.splice(AIndex,1);
+      this.Notify(Result,ACollectionNotification);
+      return Result;
+    };
   },"TCustomList<System.Longint>");
   rtl.createClass(this,"TCustomListEnumerator$G8",this.TEnumerator$G18,function () {
     this.$init = function () {
@@ -3938,6 +3953,11 @@ rtl.module("Generics.Collections",["System","Classes","SysUtils","RTLConsts","Ty
     };
     this.InitializeList = function () {
     };
+    this.DoGetEnumerator = function () {
+      var Result = null;
+      Result = this.GetEnumerator$1();
+      return Result;
+    };
     this.GetItem = function (AIndex) {
       var Result = 0;
       if ((AIndex < 0) || (AIndex >= this.FLength)) throw pas.SysUtils.EArgumentOutOfRangeException.$create("Create$1",[rtl.getResStr(pas["Generics.Strings"],"SArgumentOutOfRange")]);
@@ -3958,6 +3978,20 @@ rtl.module("Generics.Collections",["System","Classes","SysUtils","RTLConsts","Ty
       rtl.setIntfP(this,"FComparer",AComparer);
       return this;
     };
+    this.Create$3 = function (ACollection) {
+      var LItem = 0;
+      this.Create$1();
+      var $in = ACollection.GetEnumerator();
+      try {
+        while ($in.MoveNext()) {
+          LItem = $in.DoGetCurrent();
+          this.Add(LItem);
+        }
+      } finally {
+        $in = rtl.freeLoc($in)
+      };
+      return this;
+    };
     this.Destroy = function () {
       this.SetCapacity(0);
     };
@@ -3967,6 +4001,9 @@ rtl.module("Generics.Collections",["System","Classes","SysUtils","RTLConsts","Ty
       this.FItems[Result] = AValue;
       this.Notify(AValue,0);
       return Result;
+    };
+    this.Delete = function (AIndex) {
+      this.DoRemove(AIndex,1);
     };
     this.DeleteRange = function (AIndex, ACount) {
       var LDeleted = [];
@@ -3999,9 +4036,94 @@ rtl.module("Generics.Collections",["System","Classes","SysUtils","RTLConsts","Ty
   rtl.createClass(this,"TEnumerable$G18",pas.System.TObject,function () {
   },"TEnumerable<Generics.Collections.TPair<System.Longint,System.Longint>>");
   rtl.createClass(this,"TDictionary$G2",this.TEnumerable$G18,function () {
+    rtl.createClass(this,"TKeyEnumerator",$mod.TEnumerator$G18,function () {
+      this.$init = function () {
+        $mod.TEnumerator$G18.$init.call(this);
+        this.FIter = null;
+        this.FVal = null;
+      };
+      this.$final = function () {
+        this.FIter = undefined;
+        this.FVal = undefined;
+        $mod.TEnumerator$G18.$final.call(this);
+      };
+      this.DoGetCurrent = function () {
+        var Result = 0;
+        Result = rtl.trunc(this.FVal.value);
+        return Result;
+      };
+      this.DoMoveNext = function () {
+        var Result = false;
+        this.FVal = this.FIter.next();
+        Result = !this.FVal.done;
+        return Result;
+      };
+      this.Create$1 = function (AIter) {
+        this.FIter = AIter;
+        return this;
+      };
+    },"TDictionary<System.Longint,System.Longint>.TKeyEnumerator");
+    rtl.createClass(this,"TValueEnumerator",$mod.TEnumerator$G18,function () {
+      this.$init = function () {
+        $mod.TEnumerator$G18.$init.call(this);
+        this.FIter = null;
+        this.FVal = null;
+      };
+      this.$final = function () {
+        this.FIter = undefined;
+        this.FVal = undefined;
+        $mod.TEnumerator$G18.$final.call(this);
+      };
+      this.DoGetCurrent = function () {
+        var Result = 0;
+        Result = rtl.trunc(this.FVal.value);
+        return Result;
+      };
+      this.DoMoveNext = function () {
+        var Result = false;
+        this.FVal = this.FIter.next();
+        Result = !this.FVal.done;
+        return Result;
+      };
+      this.Create$1 = function (AIter) {
+        this.FIter = AIter;
+        return this;
+      };
+    },"TDictionary<System.Longint,System.Longint>.TValueEnumerator");
     rtl.createClass(this,"TValueCollection",$mod.TEnumerable$G17,function () {
+      this.$init = function () {
+        $mod.TEnumerable$G17.$init.call(this);
+        this.FMap = null;
+      };
+      this.$final = function () {
+        this.FMap = undefined;
+        $mod.TEnumerable$G17.$final.call(this);
+      };
+      this.DoGetEnumerator = function () {
+        var Result = null;
+        Result = $mod.TDictionary$G2.TValueEnumerator.$create("Create$1",[this.FMap.values()]);
+        return Result;
+      };
     },"TDictionary<System.Longint,System.Longint>.TValueCollection");
     rtl.createClass(this,"TKeyCollection",$mod.TEnumerable$G17,function () {
+      this.$init = function () {
+        $mod.TEnumerable$G17.$init.call(this);
+        this.FMap = null;
+      };
+      this.$final = function () {
+        this.FMap = undefined;
+        $mod.TEnumerable$G17.$final.call(this);
+      };
+      this.DoGetEnumerator = function () {
+        var Result = null;
+        Result = this.GetEnumerator$1();
+        return Result;
+      };
+      this.GetEnumerator$1 = function () {
+        var Result = null;
+        Result = $mod.TDictionary$G2.TKeyEnumerator.$create("Create$1",[this.FMap.keys()]);
+        return Result;
+      };
     },"TDictionary<System.Longint,System.Longint>.TKeyCollection");
     this.$init = function () {
       $mod.TEnumerable$G18.$init.call(this);
@@ -4129,7 +4251,7 @@ rtl.module("Generics.Collections",["System","Classes","SysUtils","RTLConsts","Ty
 rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Math","Generics.Defaults","Generics.Collections"],function () {
   "use strict";
   var $mod = this;
-  this.PartsTotal = 3;
+  this.PartsTotal = 4;
   rtl.recNewT(this,"TPart",function () {
     this.Input = null;
     this.RunButton = null;
@@ -4160,13 +4282,13 @@ rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Mat
   rtl.createClass(this,"TAdventApp",pas.BrowserApp.TBrowserApplication,function () {
     this.FParts$a$clone = function (a) {
       var b = [];
-      b.length = 3;
-      for (var c = 0; c < 3; c++) b[c] = $mod.TPart.$clone(a[c]);
+      b.length = 4;
+      for (var c = 0; c < 4; c++) b[c] = $mod.TPart.$clone(a[c]);
       return b;
     };
     this.$init = function () {
       pas.BrowserApp.TBrowserApplication.$init.call(this);
-      this.FParts = rtl.arraySetLength(null,$mod.TPart,3);
+      this.FParts = rtl.arraySetLength(null,$mod.TPart,4);
     };
     this.$final = function () {
       this.FParts = undefined;
@@ -4191,6 +4313,12 @@ rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Mat
       this.FParts[2].Answer = document.getElementById("Part3Answer");
       this.FParts[2].RunButton.addEventListener("click",function () {
         $Self.RunPart(3);
+      });
+      this.FParts[3].Input = document.getElementById("Part4Input");
+      this.FParts[3].RunButton = document.getElementById("Part4Run");
+      this.FParts[3].Answer = document.getElementById("Part4Answer");
+      this.FParts[3].RunButton.addEventListener("click",function () {
+        $Self.RunPart(4);
       });
     };
     this.GetRows = function (APart) {
@@ -4337,6 +4465,58 @@ rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Mat
       };
       return Result;
     };
+    this.GetPart4Answer = function (ARows) {
+      var $Self = this;
+      var Result = 0;
+      var I = 0;
+      var Row = null;
+      var TempRow = null;
+      function IsSafe(ARow) {
+        var Result = false;
+        var Delta = 0;
+        var IsAscending = false;
+        var IsDescending = false;
+        var IsSameValue = false;
+        var I = 0;
+        IsAscending = false;
+        IsDescending = false;
+        IsSameValue = false;
+        for (var $l = 1, $end = ARow.FLength - 1; $l <= $end; $l++) {
+          I = $l;
+          Delta = ARow.GetItem(I) - ARow.GetItem(I - 1);
+          var $tmp = Math.sign(Delta);
+          if ($tmp === 1) {
+            IsAscending = true}
+           else if ($tmp === 0) {
+            IsSameValue = true}
+           else if ($tmp === -1) IsDescending = true;
+          if (IsSameValue || (IsAscending && IsDescending) || (Math.abs(Delta) > 3)) {
+            Result = false;
+            return Result;
+          };
+        };
+        Result = true;
+        return Result;
+      };
+      Result = 0;
+      for (var $in = ARows, $l = 0, $end = rtl.length($in) - 1; $l <= $end; $l++) {
+        Row = $in[$l];
+        if (IsSafe(Row)) {
+          Result += 1}
+         else {
+          for (var $l1 = 0, $end1 = Row.FLength - 1; $l1 <= $end1; $l1++) {
+            I = $l1;
+            TempRow = pas["Generics.Collections"].TList$G3.$create("Create$3",[Row]);
+            TempRow.Delete(I);
+            if (IsSafe(TempRow)) {
+              Result += 1;
+              break;
+            };
+          };
+        };
+      };
+      return Result;
+    };
     this.RunPart = function (ANumber) {
       var Answer = 0;
       try {
@@ -4347,6 +4527,8 @@ rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Mat
           Answer = this.GetPart2Answer(this.GetRows(2))}
          else if ($tmp === 3) {
           Answer = this.GetPart3Answer(this.GetRows(3))}
+         else if ($tmp === 4) {
+          Answer = this.GetPart4Answer(this.GetRows(4))}
          else {
           throw pas.SysUtils.Exception.$create("Create$1",[pas.SysUtils.Format("Invalid step: %s",pas.System.VarRecs(0,ANumber))]);
         };

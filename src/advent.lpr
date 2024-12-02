@@ -7,7 +7,7 @@ uses
   Generics.Defaults, Generics.Collections;
 
 const
-  PartsTotal = 3;
+  PartsTotal = 4;
 
 type
   TRow = specialize TList<Integer>;
@@ -40,8 +40,9 @@ type
     function GetPart1Answer(const ARows: TRows): Integer;
     function GetPart2Answer(const ARows: TRows): Integer;
     function GetPart3Answer(const ARows: TRows): Integer;
+    function GetPart4Answer(const ARows: TRows): Integer;
     procedure RunPart(ANumber: Integer);
-    property Columns[Part: Integer]: TRows read GetRows;
+    property Rows[Part: Integer]: TRows read GetRows;
   protected
     procedure DoRun; override;
   public
@@ -86,6 +87,15 @@ begin
     procedure
     begin
       RunPart(3);
+    end);
+
+  FParts[4].Input := TJSHTMLTextAreaElement(Document.GetElementById('Part4Input'));
+  FParts[4].RunButton := TJSHTMLButtonElement(Document.GetElementById('Part4Run'));
+  FParts[4].Answer := TJSHTMLDivElement(Document.GetElementById('Part4Answer'));
+  FParts[4].RunButton.AddEventListener('click',
+    procedure
+    begin
+      RunPart(4);
     end);
 end;
 
@@ -198,15 +208,72 @@ begin
   end;
 end;
 
-procedure Tadventapp.Runpart(Anumber: Integer);
+function TAdventApp.GetPart4Answer(const ARows: TRows): Integer;
+var
+  I: Integer;
+  Row, TempRow: TRow;
+
+  function IsSafe(ARow: TRow): Boolean;
+  var
+    Delta: Integer;
+    IsAscending, IsDescending, IsSameValue: Boolean;
+    I: Integer;
+  begin
+    IsAscending := false;
+    IsDescending := false;
+    IsSameValue := false;
+
+    for I := 1 to ARow.Count - 1 do
+    begin
+      Delta := ARow[I] - ARow[I - 1];
+      case Sign(Delta) of
+        1: IsAscending := true;
+        0: IsSameValue := true;
+       -1: IsDescending := true;
+      end;
+
+      if IsSameValue or (IsAscending and IsDescending) or (Abs(Delta) > 3) then
+      begin
+        Result := false;
+        Exit;
+      end;
+    end;
+    Result := true;
+  end;
+
+begin
+  Result := 0;
+  for Row in ARows do
+  begin
+    if IsSafe(Row) then
+      Inc(Result)
+    else
+    begin
+      for I := 0 to Row.Count - 1 do
+      begin
+        TempRow := TRow.Create(Row);
+        TempRow.Delete(I);
+        if IsSafe(TempRow) then
+        begin
+          Inc(Result);
+          break;
+        end;
+      end;
+    end;
+  end;
+end;
+
+
+procedure TAdventApp.RunPart(ANumber: Integer);
 var
   Answer: Integer;
 begin
   try
     case ANumber of
-      1: Answer := GetPart1Answer(Columns[1]);
-      2: Answer := GetPart2Answer(Columns[2]);
-      3: Answer := GetPart3Answer(Columns[3]);
+      1: Answer := GetPart1Answer(Rows[1]);
+      2: Answer := GetPart2Answer(Rows[2]);
+      3: Answer := GetPart3Answer(Rows[3]);
+      4: Answer := GetPart4Answer(Rows[4]);
     else
       raise Exception.Create(Format('Invalid step: %s', [ANumber]));
     end;
@@ -217,9 +284,9 @@ begin
   end;
 end;
 
-procedure Tadventapp.Dorun;
+procedure TAdventApp.DoRun;
 begin
-  Registerserviceworker('/ServiceWorker.js');
+  RegisterServiceWorker('/ServiceWorker.js');
 
   BindElements();
 end;
