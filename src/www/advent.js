@@ -1974,8 +1974,6 @@ rtl.module("SysUtils",["System","RTLConsts","JS"],function () {
   });
   rtl.createClass(this,"EExternal",this.Exception,function () {
   });
-  rtl.createClass(this,"EAssertionFailed",this.Exception,function () {
-  });
   rtl.createClass(this,"EConvertError",this.Exception,function () {
   });
   rtl.createClass(this,"EExternalException",this.EExternal,function () {
@@ -3781,6 +3779,10 @@ rtl.module("BrowserApp",["System","Classes","SysUtils","Types","JS","Web","CustA
     pas.SysUtils.OnGetEnvironmentString = $impl.MyGetEnvironmentString;
   };
 },[]);
+rtl.module("Math",["System"],function () {
+  "use strict";
+  var $mod = this;
+});
 rtl.module("Generics.Defaults",["System"],function () {
   "use strict";
   var $mod = this;
@@ -3946,6 +3948,10 @@ rtl.module("Generics.Collections",["System","Classes","SysUtils","RTLConsts","Ty
       var Result = null;
       Result = this.TEnumerator.$create("Create$1",[this]);
       return Result;
+    };
+    this.Create$1 = function () {
+      this.InitializeList();
+      return this;
     };
     this.Create$2 = function (AComparer) {
       this.InitializeList();
@@ -4120,17 +4126,19 @@ rtl.module("Generics.Collections",["System","Classes","SysUtils","RTLConsts","Ty
     $mod.$resourcestrings = {SErrDictKeyNotFound: {org: "Key value not found"}};
   };
 },[]);
-rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Generics.Defaults","Generics.Collections"],function () {
+rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Math","Generics.Defaults","Generics.Collections"],function () {
   "use strict";
   var $mod = this;
-  this.PartsTotal = 2;
+  this.PartsTotal = 3;
   rtl.recNewT(this,"TPart",function () {
+    this.Input = null;
     this.RunButton = null;
     this.Answer = null;
     this.$eq = function (b) {
-      return (this.RunButton === b.RunButton) && (this.Answer === b.Answer);
+      return (this.Input === b.Input) && (this.RunButton === b.RunButton) && (this.Answer === b.Answer);
     };
     this.$assign = function (s) {
+      this.Input = s.Input;
       this.RunButton = s.RunButton;
       this.Answer = s.Answer;
       return this;
@@ -4152,116 +4160,141 @@ rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Gen
   rtl.createClass(this,"TAdventApp",pas.BrowserApp.TBrowserApplication,function () {
     this.FParts$a$clone = function (a) {
       var b = [];
-      b.length = 2;
-      for (var c = 0; c < 2; c++) b[c] = $mod.TPart.$clone(a[c]);
+      b.length = 3;
+      for (var c = 0; c < 3; c++) b[c] = $mod.TPart.$clone(a[c]);
       return b;
     };
     this.$init = function () {
       pas.BrowserApp.TBrowserApplication.$init.call(this);
-      this.FInput = null;
-      this.FParts = rtl.arraySetLength(null,$mod.TPart,2);
+      this.FParts = rtl.arraySetLength(null,$mod.TPart,3);
     };
     this.$final = function () {
-      this.FInput = undefined;
       this.FParts = undefined;
       pas.BrowserApp.TBrowserApplication.$final.call(this);
     };
     this.BindElements = function () {
       var $Self = this;
-      this.FInput = document.getElementById("Input");
+      this.FParts[0].Input = document.getElementById("Part1Input");
       this.FParts[0].RunButton = document.getElementById("Part1Run");
       this.FParts[0].Answer = document.getElementById("Part1Answer");
       this.FParts[0].RunButton.addEventListener("click",function () {
         $Self.RunPart(1);
       });
+      this.FParts[1].Input = document.getElementById("Part2Input");
       this.FParts[1].RunButton = document.getElementById("Part2Run");
       this.FParts[1].Answer = document.getElementById("Part2Answer");
       this.FParts[1].RunButton.addEventListener("click",function () {
         $Self.RunPart(2);
       });
+      this.FParts[2].Input = document.getElementById("Part3Input");
+      this.FParts[2].RunButton = document.getElementById("Part3Run");
+      this.FParts[2].Answer = document.getElementById("Part3Answer");
+      this.FParts[2].RunButton.addEventListener("click",function () {
+        $Self.RunPart(3);
+      });
     };
-    this.GetColumns = function () {
-      var Result = rtl.arraySetLength(null,null,2);
+    this.GetRows = function (APart) {
+      var Result = [];
       var Lines = null;
       var Line = "";
-      var Items = [];
-      var $ir = rtl.createIntfRefs();
+      var Item = "";
+      var Row = null;
+      Lines = pas.Classes.TStringList.$create("Create$1");
+      Lines.SetTextStr(this.FParts[APart - 1].Input.value);
+      Result = rtl.arraySetLength(Result,null,0);
+      var $in = Lines.GetEnumerator();
       try {
-        Lines = pas.Classes.TStringList.$create("Create$1");
-        Lines.SetTextStr(this.FInput.value);
-        Result[0] = pas["Generics.Collections"].TList$G3.$create("Create$2",[$ir.ref(1,rtl.queryIntfT($mod.TDefaultComparer$G1.$create("Create"),pas["Generics.Defaults"].IComparer$G18))]);
-        Result[1] = pas["Generics.Collections"].TList$G3.$create("Create$2",[$ir.ref(2,rtl.queryIntfT($mod.TDefaultComparer$G1.$create("Create"),pas["Generics.Defaults"].IComparer$G18))]);
-        var $in = Lines.GetEnumerator();
-        try {
-          while ($in.MoveNext()) {
-            Line = $in.GetCurrent();
-            if (pas.SysUtils.TStringHelper.IsEmpty.call({a: pas.SysUtils.TStringHelper.Trim.call({get: function () {
-                  return Line;
-                }, set: function (v) {
-                  Line = v;
-                }}), get: function () {
-                return this.a;
-              }, set: function (v) {
-                this.a = v;
-              }})) continue;
-            Items = pas.SysUtils.TStringHelper.Split$4.call({get: function () {
+        while ($in.MoveNext()) {
+          Line = $in.GetCurrent();
+          if (pas.SysUtils.TStringHelper.IsEmpty.call({a: pas.SysUtils.TStringHelper.Trim.call({get: function () {
                 return Line;
               }, set: function (v) {
                 Line = v;
-              }}," ",1);
-            Result[0].Add(pas.SysUtils.TStringHelper.ToInteger$1.call({a: 0, p: Items, get: function () {
-                return this.p[this.a];
+              }}), get: function () {
+              return this.a;
+            }, set: function (v) {
+              this.a = v;
+            }})) continue;
+          Row = pas["Generics.Collections"].TList$G3.$create("Create$1");
+          for (var $in1 = pas.SysUtils.TStringHelper.Split$4.call({get: function () {
+              return Line;
+            }, set: function (v) {
+              Line = v;
+            }}," ",1), $l = 0, $end = rtl.length($in1) - 1; $l <= $end; $l++) {
+            Item = $in1[$l];
+            Row.Add(pas.SysUtils.TStringHelper.ToInteger$1.call({get: function () {
+                return Item;
               }, set: function (v) {
-                this.p[this.a] = v;
+                Item = v;
               }}));
-            Result[1].Add(pas.SysUtils.TStringHelper.ToInteger$1.call({a: 1, p: Items, get: function () {
-                return this.p[this.a];
-              }, set: function (v) {
-                this.p[this.a] = v;
-              }}));
-          }
-        } finally {
-          $in = rtl.freeLoc($in)
+          };
+          Result = rtl.arraySetLength(Result,null,rtl.length(Result) + 1);
+          Result[rtl.length(Result) - 1] = Row;
+        }
+      } finally {
+        $in = rtl.freeLoc($in)
+      };
+      return Result;
+    };
+    this.GetPart1Answer = function (ARows) {
+      var Result = 0;
+      var Row = null;
+      var Left = null;
+      var Right = null;
+      var Comparer = null;
+      var I = 0;
+      var $ir = rtl.createIntfRefs();
+      try {
+        Comparer = $mod.TDefaultComparer$G1.$create("Create");
+        Left = pas["Generics.Collections"].TList$G3.$create("Create$2",[$ir.ref(1,rtl.queryIntfT(Comparer,pas["Generics.Defaults"].IComparer$G18))]);
+        Right = pas["Generics.Collections"].TList$G3.$create("Create$2",[$ir.ref(2,rtl.queryIntfT(Comparer,pas["Generics.Defaults"].IComparer$G18))]);
+        for (var $in = ARows, $l = 0, $end = rtl.length($in) - 1; $l <= $end; $l++) {
+          Row = $in[$l];
+          Left.Add(Row.GetItem(0));
+          Right.Add(Row.GetItem(1));
         };
-        Result[0].Sort();
-        Result[1].Sort();
+        Left.Sort();
+        Right.Sort();
+        Result = 0;
+        for (var $l1 = 0, $end1 = Left.FLength - 1; $l1 <= $end1; $l1++) {
+          I = $l1;
+          Result += Math.abs(Left.GetItem(I) - Right.GetItem(I));
+        };
       } finally {
         $ir.free();
       };
       return Result;
     };
-    this.GetPart1Answer = function (AValues) {
-      var Result = 0;
-      var I = 0;
-      AValues[0].Sort();
-      AValues[1].Sort();
-      Result = 0;
-      for (var $l = 0, $end = AValues[0].FLength - 1; $l <= $end; $l++) {
-        I = $l;
-        Result += Math.abs(AValues[0].GetItem(I) - AValues[1].GetItem(I));
-      };
-      return Result;
-    };
-    this.GetPart2Answer = function (AValues) {
+    this.GetPart2Answer = function (ARows) {
       var Result = 0;
       var number = 0;
       var Value = 0;
       var Counts = null;
+      var Row = null;
+      var Left = null;
+      var Right = null;
+      Left = pas["Generics.Collections"].TList$G3.$create("Create$1");
+      Right = pas["Generics.Collections"].TList$G3.$create("Create$1");
+      for (var $in = ARows, $l = 0, $end = rtl.length($in) - 1; $l <= $end; $l++) {
+        Row = $in[$l];
+        Left.Add(Row.GetItem(0));
+        Right.Add(Row.GetItem(1));
+      };
       Counts = pas["Generics.Collections"].TDictionary$G2.$create("Create$1",[0]);
-      var $in = AValues[1].GetEnumerator$1();
+      var $in1 = Right.GetEnumerator$1();
       try {
-        while ($in.MoveNext()) {
-          number = $in.DoGetCurrent();
+        while ($in1.MoveNext()) {
+          number = $in1.DoGetCurrent();
           if (!Counts.ContainsKey(number)) Counts.SetItem(number,0);
           Counts.SetItem(number,Counts.GetItem(number) + 1);
         }
       } finally {
-        $in = rtl.freeLoc($in)
+        $in1 = rtl.freeLoc($in1)
       };
-      var $in1 = AValues[0].GetEnumerator$1();
+      var $in2 = Left.GetEnumerator$1();
       try {
-        while ($in1.MoveNext()) {
-          number = $in1.DoGetCurrent();
+        while ($in2.MoveNext()) {
+          number = $in2.DoGetCurrent();
           if (Counts.TryGetValue(number,{get: function () {
               return Value;
             }, set: function (v) {
@@ -4269,7 +4302,38 @@ rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Gen
             }})) Result += number * Value;
         }
       } finally {
-        $in1 = rtl.freeLoc($in1)
+        $in2 = rtl.freeLoc($in2)
+      };
+      return Result;
+    };
+    this.GetPart3Answer = function (ARows) {
+      var Result = 0;
+      var I = 0;
+      var Row = null;
+      var Delta = 0;
+      var IsAscending = false;
+      var IsDescending = false;
+      var IsSameValue = false;
+      Result = rtl.length(ARows);
+      for (var $in = ARows, $l = 0, $end = rtl.length($in) - 1; $l <= $end; $l++) {
+        Row = $in[$l];
+        IsAscending = false;
+        IsDescending = false;
+        IsSameValue = false;
+        for (var $l1 = 1, $end1 = Row.FLength - 1; $l1 <= $end1; $l1++) {
+          I = $l1;
+          Delta = Row.GetItem(I) - Row.GetItem(I - 1);
+          var $tmp = Math.sign(Delta);
+          if ($tmp === 1) {
+            IsAscending = true}
+           else if ($tmp === 0) {
+            IsSameValue = true}
+           else if ($tmp === -1) IsDescending = true;
+          if (IsSameValue || (IsAscending && IsDescending) || (Math.abs(Delta) > 3)) {
+            Result -= 1;
+            break;
+          };
+        };
       };
       return Result;
     };
@@ -4278,9 +4342,11 @@ rtl.module("program",["System","BrowserApp","JS","Classes","SysUtils","Web","Gen
       try {
         var $tmp = ANumber;
         if ($tmp === 1) {
-          Answer = this.GetPart1Answer(this.GetColumns())}
+          Answer = this.GetPart1Answer(this.GetRows(1))}
          else if ($tmp === 2) {
-          Answer = this.GetPart2Answer(this.GetColumns())}
+          Answer = this.GetPart2Answer(this.GetRows(2))}
+         else if ($tmp === 3) {
+          Answer = this.GetPart3Answer(this.GetRows(3))}
          else {
           throw pas.SysUtils.Exception.$create("Create$1",[pas.SysUtils.Format("Invalid step: %s",pas.System.VarRecs(0,ANumber))]);
         };

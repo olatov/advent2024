@@ -3,21 +3,22 @@ program Advent;
 {$mode objfpc}
 
 uses
-  BrowserApp, JS, Classes, SysUtils, Web,
+  BrowserApp, JS, Classes, SysUtils, Web, Math,
   Generics.Defaults, Generics.Collections;
 
 const
-  PartsTotal = 2;
+  PartsTotal = 3;
 
 type
-  TIntegerList = specialize TList<Integer>;
+  TRow = specialize TList<Integer>;
 
   TPart = record
+    Input: TJSHTMLTextAreaElement;
     RunButton: TJSHTMLButtonElement;
     Answer: TJSHTMLDivElement;
   end;
 
-  TColumns = array[1..2] of TIntegerList;
+  TRows = array of TRow;
 
   { TDefaultComparer }
 
@@ -30,17 +31,17 @@ type
 
   { TAdventApp }
 
-  TAdventApp = class(Tbrowserapplication)
+  TAdventApp = class(TBrowserApplication)
 
   private
-    FInput: TJSHTMLTextAreaElement;
     FParts: array[1..PartsTotal] of TPart;
     procedure BindElements();
-    function GetColumns(): TColumns;
-    function GetPart1Answer(const AValues: TColumns): Integer;
-    function GetPart2Answer(const AValues: Tcolumns): Integer;
+    function GetRows(APart: Integer): TRows;
+    function GetPart1Answer(const ARows: TRows): Integer;
+    function GetPart2Answer(const ARows: TRows): Integer;
+    function GetPart3Answer(const ARows: TRows): Integer;
     procedure RunPart(ANumber: Integer);
-    property Columns: TColumns read GetColumns;
+    property Columns[Part: Integer]: TRows read GetRows;
   protected
     procedure DoRun; override;
   public
@@ -58,10 +59,9 @@ begin
     Result := 0;
 end;
 
-procedure TAdventApp.Bindelements();
+procedure Tadventapp.BindElements;
 begin
-  FInput := TJSHTMLTextAreaElement(Document.GetElementById('Input'));
-
+  FParts[1].Input := TJSHTMLTextAreaElement(Document.GetElementById('Part1Input'));
   FParts[1].RunButton := TJSHTMLButtonElement(Document.GetElementById('Part1Run'));
   FParts[1].Answer := TJSHTMLDivElement(Document.GetElementById('Part1Answer'));
   FParts[1].RunButton.AddEventListener('click',
@@ -70,6 +70,7 @@ begin
       RunPart(1);
     end);
 
+  FParts[2].Input := TJSHTMLTextAreaElement(Document.GetElementById('Part2Input'));
   FParts[2].RunButton := TJSHTMLButtonElement(Document.GetElementById('Part2Run'));
   FParts[2].Answer := TJSHTMLDivElement(Document.GetElementById('Part2Answer'));
   FParts[2].RunButton.AddEventListener('click',
@@ -77,56 +78,82 @@ begin
     begin
       RunPart(2);
     end);
+
+  FParts[3].Input := TJSHTMLTextAreaElement(Document.GetElementById('Part3Input'));
+  FParts[3].RunButton := TJSHTMLButtonElement(Document.GetElementById('Part3Run'));
+  FParts[3].Answer := TJSHTMLDivElement(Document.GetElementById('Part3Answer'));
+  FParts[3].RunButton.AddEventListener('click',
+    procedure
+    begin
+      RunPart(3);
+    end);
 end;
 
-function TAdventApp.GetColumns: TColumns;
+function TAdventApp.GetRows(APart: Integer): TRows;
 var
   Lines: TStringList;
   Line: String;
-  Items: array of String;
+  Item: String;
+  Row: TRow;
 begin
   Lines := TStringList.Create;
-  Lines.Text := FInput.Value;
+  Lines.Text := FParts[APart].Input.Value;
 
-  Result[1] := TIntegerList.Create(TIntegerComparer.Create);
-  Result[2] := TIntegerList.Create(TIntegerComparer.Create);
-
+  SetLength(Result, 0);
   for Line in Lines do
   begin
     if Line.Trim().IsEmpty then continue;
 
-    Items := Line.Split(' ', TStringSplitOptions.ExcludeEmpty);
-    Result[1].Add(Items[0].ToInteger);
-    Result[2].Add(Items[1].ToInteger);
-  end;
+    Row := TRow.Create();
+    for Item in Line.Split(' ', TStringSplitOptions.ExcludeEmpty) do
+      Row.Add(Item.ToInteger());
 
-  Result[1].Sort;
-  Result[2].Sort;
+    SetLength(Result, Length(Result) + 1);
+    Result[High(Result)] := Row;
+  end;
 end;
 
-function TAdventApp.GetPart1Answer(const Avalues: Tcolumns): Integer;
+function TAdventApp.GetPart1Answer(const ARows: TRows): Integer;
 var
+  Row, Left, Right: TRow;
+  Comparer: TIntegerComparer;
   I: Integer;
 begin
-  Assert(AValues[1].Count = AValues[2].Count);
+  Comparer := TIntegerComparer.Create();
+  Left := TRow.Create(Comparer);
+  Right := TRow.Create(Comparer);
 
-  AValues[1].Sort;
-  AValues[2].Sort;
+  for Row in ARows do
+  begin
+    Left.Add(Row[0]);
+    Right.Add(Row[1]);
+  end;
+
+  Left.Sort;
+  Right.Sort;
 
   Result := 0;
-  for I := 0 to AValues[1].Count - 1 do
-    Inc(Result, Abs(AValues[1][I] - AValues[2][I]));
+  for I := 0 to Left.Count - 1 do
+    Inc(Result, Abs(Left[I] - Right[I]));
 end;
 
-function TAdventApp.GetPart2Answer(const AValues: Tcolumns): Integer;
+function TAdventApp.GetPart2Answer(const ARows: TRows): Integer;
 var
   Number, Value: Integer;
   Counts: specialize TDictionary<Integer, Integer>;
+  Row, Left, Right: TRow;
 begin
-  Assert(AValues[1].Count = AValues[2].Count);
+  Left := TRow.Create;
+  Right := TRow.Create;
+
+  for Row in ARows do
+  begin
+    Left.Add(Row[0]);
+    Right.Add(Row[1]);
+  end;
 
   Counts := specialize TDictionary<Integer, Integer>.Create();
-  for Number in AValues[2] do
+  for Number in Right do
   begin
     if not Counts.ContainsKey(Number) then
       Counts[Number] := 0;
@@ -134,19 +161,52 @@ begin
     Counts[Number] := Counts[Number] + 1;
   end;
 
-  for Number in AValues[1] do
+  for Number in Left do
     if Counts.TryGetValue(Number, Value) then
       Inc(Result, Number * Value);
 end;
 
-procedure TAdventApp.RunPart(Anumber: Integer);
+function TAdventApp.GetPart3Answer(const ARows: TRows): Integer;
+var
+  I: Integer;
+  Row: TRow;
+  Delta: Integer;
+  IsAscending, IsDescending, IsSameValue: Boolean;
+begin
+  Result := Length(ARows);
+  for Row in ARows do
+  begin
+    IsAscending := false;
+    IsDescending := false;
+    IsSameValue := false;
+
+    for I := 1 to Row.Count - 1 do
+    begin
+      Delta := Row[I] - Row[I - 1];
+      case Sign(Delta) of
+        1: IsAscending := true;
+        0: IsSameValue := true;
+       -1: IsDescending := true;
+      end;
+
+      if IsSameValue or (IsAscending and IsDescending) or (Abs(Delta) > 3) then
+      begin
+        Dec(Result);
+        break;
+      end;
+    end;
+  end;
+end;
+
+procedure Tadventapp.Runpart(Anumber: Integer);
 var
   Answer: Integer;
 begin
   try
     case ANumber of
-      1: Answer := GetPart1Answer(Columns);
-      2: Answer := GetPart2Answer(Columns);
+      1: Answer := GetPart1Answer(Columns[1]);
+      2: Answer := GetPart2Answer(Columns[2]);
+      3: Answer := GetPart3Answer(Columns[3]);
     else
       raise Exception.Create(Format('Invalid step: %s', [ANumber]));
     end;
